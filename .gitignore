@@ -1,0 +1,15 @@
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+cookies.json
+out/*
+!out/.gitkeep
+data/*
+!data/.gitkeep
+!data/.gitkeep
+.DS_Store
+*.zip
