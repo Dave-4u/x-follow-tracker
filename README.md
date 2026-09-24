@@ -83,12 +83,38 @@ Keep `.env` private. Do **not** email, chat, or upload these cookies.
 Default is already `officialdev05` in `config.json`. To change:
 
 ```bash
+# macOS / Linux (venv activated)
 python -m follow_tracker config --set-username yourname
+
+# Windows
+.\.venv\Scripts\python.exe -m follow_tracker config --set-username yourname
 ```
 
 Or edit `config.json` directly.
 
 ### 5. Run
+
+> **Windows:** Do **not** use bare `python -m follow_tracker …` — that hits the system Python and usually fails with `ModuleNotFoundError: twikit`. Always use the venv interpreter or the helpers below.
+
+**Windows (recommended)**
+
+```powershell
+# PowerShell — creates .venv / .env from example if needed, applies patches, then runs
+.\run.ps1
+
+# Or call the venv python directly:
+.\.venv\Scripts\python.exe -m follow_tracker run
+.\.venv\Scripts\python.exe -m follow_tracker scan
+.\.venv\Scripts\python.exe -m follow_tracker watch
+```
+
+```bat
+REM cmd.exe
+run.bat
+.venv\Scripts\python.exe -m follow_tracker run
+```
+
+**macOS / Linux**
 
 ```bash
 # Help (works without cookies)
@@ -131,7 +157,9 @@ First `watch`/`run` with no prior `data/` snapshot only saves a **baseline**. Ru
 |---------|-----|
 | “Missing X session cookies” | Create `.env` from `.env.example` with real `AUTH_TOKEN` / `CT0` |
 | Auth / 401-ish errors after a while | Re-copy cookies from the browser |
-| `Couldn't get KEY_BYTE indices` | Run `python scripts/apply_twikit_patch.py` (X changed a page format; twikit 2.3.3 needs this patch) |
+| `Couldn't get KEY_BYTE indices` | Run `python scripts/apply_twikit_patch.py` (Windows: `.\.venv\Scripts\python.exe scripts\apply_twikit_patch.py`). X changed a page format; twikit 2.3.3 needs this patch. |
+| `KeyError: 'urls'` in `twikit/user.py` | Re-run the patch script (also patches `user.py`), or pull latest — runtime monkey-patch in `follow_tracker` hardens missing `entities.description.urls`. |
+| `ModuleNotFoundError: twikit` | You used system `python` instead of the venv. On Windows: `.\.venv\Scripts\python.exe -m follow_tracker run` or `.\run.ps1`. |
 | Rate limits / empty pages | Wait and re-run; the client pauses briefly between pages |
 | Wrong account | `python -m follow_tracker config --set-username …` |
 

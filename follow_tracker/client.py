@@ -8,6 +8,9 @@ from typing import Any
 from twikit import Client
 
 from follow_tracker.config import AppConfig, save_project_config
+from follow_tracker.twikit_patch import apply_user_urls_patch
+
+apply_user_urls_patch()
 
 
 def make_client(cfg: AppConfig) -> Client:
