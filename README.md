@@ -29,6 +29,7 @@ cd x-follow-tracker
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+python scripts/apply_twikit_patch.py
 ```
 
 **Windows (cmd)**
@@ -38,6 +39,7 @@ cd x-follow-tracker
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
+python scripts\apply_twikit_patch.py
 ```
 
 **Windows (PowerShell)**
@@ -47,6 +49,7 @@ cd x-follow-tracker
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+python scripts\apply_twikit_patch.py
 ```
 
 ### 2. Get cookies from your browser
@@ -128,6 +131,7 @@ First `watch`/`run` with no prior `data/` snapshot only saves a **baseline**. Ru
 |---------|-----|
 | “Missing X session cookies” | Create `.env` from `.env.example` with real `AUTH_TOKEN` / `CT0` |
 | Auth / 401-ish errors after a while | Re-copy cookies from the browser |
+| `Couldn't get KEY_BYTE indices` | Run `python scripts/apply_twikit_patch.py` (X changed a page format; twikit 2.3.3 needs this patch) |
 | Rate limits / empty pages | Wait and re-run; the client pauses briefly between pages |
 | Wrong account | `python -m follow_tracker config --set-username …` |
 
