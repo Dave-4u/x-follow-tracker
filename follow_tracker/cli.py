@@ -31,6 +31,10 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("watch", help="Diff current followers vs last snapshot; report who unfollowed")
     sub.add_parser("run", help="Fetch once: unfollow diff + non-follow-back report + snapshots")
 
+    dash = sub.add_parser("dashboard", help="Open the Follow Ledger web dashboard over saved snapshots (no cookies needed)")
+    dash.add_argument("--host", default="127.0.0.1")
+    dash.add_argument("--port", type=int, default=8770)
+
     cfg_p = sub.add_parser("config", help="Show or set username in config.json")
     cfg_p.add_argument("--set-username", metavar="NAME", help="Persist username to config.json")
 
@@ -53,6 +57,12 @@ def main(argv: list[str] | None = None) -> int:
         proj = load_project_config()
         print(f"username: {proj.get('username')}")
         print(f"user_id:  {proj.get('user_id')}")
+        return 0
+
+    if args.command == "dashboard":
+        from follow_tracker.dashboard import serve
+
+        serve(args.host, args.port)
         return 0
 
     # Commands that hit X require cookies

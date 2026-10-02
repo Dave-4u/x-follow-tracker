@@ -1,2 +1,2 @@
-twikit>=2.3.3
-python-dotenv>=1.0.0
+twikit==2.3.3
+python-dotenv==1.2.4

@@ -1,16 +1,48 @@
-# X Follow Tracker
+# X Follow Tracker · Follow Ledger
 
-Local follow/follower tracker for X (Twitter). Uses **browser session cookies** via [twikit](https://github.com/d60/twikit) — **no official X API** and **no API credits**.
+A small, local tool for the very human question "who doesn't follow me back, and who unfollowed me?" on X (Twitter). It snapshots your following/followers lists, diffs them over time, writes Markdown + CSV reports, and gives you **Follow Ledger**, a friendly dashboard to sort through the results.
 
-Default account: `@officialdev05` (configurable in `config.json`).
+I built it because the official API costs money for something this simple, and because most "unfollower" apps want your password. This runs on your own machine with your own session, and the dashboard also works with zero cookies if you use X's own data archive.
 
-## What it does
+**Try Follow Ledger in your browser:** https://dave-4u.github.io/x-follow-tracker/ (sample data included; your files never leave the tab)
+
+![Follow Ledger with sample data](docs/img/screenshot.png)
+
+## What Follow Ledger gives you
+
+- Tabs for **Not following back**, **Unfollowed you**, **Fans** (follow you, you don't follow them), **Mutuals**, and **New followers**
+- A quick summary: counts, follower ratio, and a mutuals donut
+- "Keep" anyone you follow for their posts, not for a follow back (remembered in your browser), then hide them
+- Search (<kbd>/</kbd>), sort, switch tabs with <kbd>←</kbd>/<kbd>→</kbd>, export the current tab as CSV (<kbd>E</kbd>)
+- Loads the tracker's `data/` snapshots automatically when you run `./run.sh`, or takes dropped files: tracker snapshots, or `following.js` + `follower.js` from **Settings → Your account → Download an archive**
+
+| Empty state | On a phone |
+|---|---|
+| ![Empty state](docs/img/screenshot-empty.png) | ![Mobile](docs/img/screenshot-mobile.png) |
+
+## Quickstart
+
+```bash
+git clone https://github.com/Dave-4u/x-follow-tracker.git
+cd x-follow-tracker
+./run.sh              # Follow Ledger on http://127.0.0.1:8770 (no cookies needed)
+cp .env.example .env  # add AUTH_TOKEN and CT0 from your browser (see below)
+./run.sh run          # fetch once: unfollow diff + non-follow-back report + snapshots
+./run.sh test         # 6 tests
+```
+
+> **Heads up:** this is an unofficial client that uses your browser session. Keep runs occasional (the client already pauses between pages), never share your cookies, and accept that X can change things or rate-limit at any time. The dashboard itself never talks to X.
+
+Default account: `@officialdev05` (change it in `config.json` or with `config --set-username`).
+
+## Commands
 
 | Command | Purpose |
 |---------|---------|
 | `scan` | List accounts you **follow who do not follow back**. Writes Markdown + CSV under `out/`, and snapshots under `data/`. |
 | `watch` | Compare current followers to the previous snapshot; report who **unfollowed** you. |
 | `run` | One fetch: unfollow diff **and** non-follow-back report + snapshots. |
+| `dashboard` | Open Follow Ledger over your saved snapshots (read-only, binds to 127.0.0.1). |
 | `config` | Show or set the tracked username. |
 
 ## Requirements
@@ -18,9 +50,9 @@ Default account: `@officialdev05` (configurable in `config.json`).
 - Python 3.10+ (3.11/3.12/3.13 fine)
 - Your own X account cookies (`AUTH_TOKEN`, `CT0`) — kept only on **your** machine
 
-## Quick start
+## Manual setup (Windows, or without run.sh)
 
-### 1. Unpack and create a venv
+### 1. Create a venv
 
 **macOS / Linux**
 
@@ -163,6 +195,17 @@ First `watch`/`run` with no prior `data/` snapshot only saves a **baseline**. Ru
 | Rate limits / empty pages | Wait and re-run; the client pauses briefly between pages |
 | Wrong account | `python -m follow_tracker config --set-username …` |
 
+## Tech stack
+
+Python 3.10+ · [twikit](https://github.com/d60/twikit) 2.3.3 (patched) · python-dotenv · stdlib `http.server` for the dashboard · vanilla HTML/CSS/JS (DM Serif Display + Manrope)
+
+## Roadmap
+
+- [ ] Follower history chart across all snapshots
+- [ ] Optional scheduled `watch` with a desktop notification
+- [ ] Profile details (bio, follower count) in the ledger when the snapshot has them
+- [ ] Import from the Bluesky / Threads equivalents
+
 ## License
 
-Personal / local use. Unofficial client — use responsibly and within X’s terms.
+MIT, see [LICENSE](LICENSE). This is an unofficial client: use it responsibly and within X's terms. Not affiliated with X Corp.

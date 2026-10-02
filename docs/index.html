@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Follow Ledger · x-follow-tracker</title>
+<meta name="description" content="See who doesn't follow you back on X, who unfollowed, and who your mutuals are. Runs in your browser; your data never leaves it.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232b1d2f'/><path d='M9 17l5 5 9-12' stroke='%23ffe14d' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#2b1d2f;--ink-2:#5b4a5e;--muted:#7d6f7f;--paper:#fff6f1;--card:#fffdfb;--line:#ecdcd3;--hl:#ffe14d;--mint:#11865f;--mint-bg:#dcf3e9;--brick:#b93a12;--brick-bg:#fbe3d9;--sky:#2d5bd7;--sky-bg:#e3eafc;--r:16px;
+  --serif:"DM Serif Display",Georgia,serif;--sans:"Manrope",system-ui,sans-serif;--mono:"DM Mono",ui-monospace,monospace}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 var(--sans)}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--sky);outline-offset:2px;border-radius:8px}
+.wrap{max-width:1180px;margin:0 auto;padding:26px clamp(14px,3vw,30px) 50px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{width:40px;height:40px}
+.brand b{font:400 1.7rem/1 var(--serif);display:block}
+.brand span{font-size:.85rem;color:var(--muted)}
+.src{margin-left:auto;font:500 .78rem var(--mono);color:var(--ink-2);background:var(--card);border:1px solid var(--line);padding:.35rem .7rem;border-radius:999px}
+.hero{display:grid;grid-template-columns:1.25fr 1fr;gap:28px;align-items:end;margin:30px 0 22px}
+.hero h1{font:400 clamp(2.1rem,4.6vw,3.4rem)/1.04 var(--serif);margin:0;letter-spacing:-.01em}
+.hero h1 mark{background:linear-gradient(transparent 55%,var(--hl) 55%);color:inherit;padding:0 .1em}
+.hero p{margin:0;color:var(--ink-2)}
+.hero .privacy{font-size:.88rem;margin-top:.6rem;color:var(--mint)}
+.btn{appearance:none;font:700 .9rem var(--sans);border:1.5px solid var(--ink);background:var(--card);color:var(--ink);padding:.55rem .95rem;border-radius:11px;cursor:pointer;transition:transform .12s,box-shadow .12s,background .15s}
+.btn:hover{box-shadow:3px 3px 0 var(--ink);transform:translate(-1px,-1px)}
+.btn:active{box-shadow:none;transform:none}
+.btn.dark{background:var(--ink);color:var(--paper)}
+.btn.dark:hover{box-shadow:3px 3px 0 var(--hl)}
+.btn.sm{padding:.3rem .6rem;font-size:.8rem;border-width:1px}
+kbd{font:500 .72rem var(--mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 .3rem;background:var(--card)}
+/* drop zone */
+.drop{border:2px dashed #d8c3b8;border-radius:var(--r);background:var(--card);padding:26px;display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;transition:border-color .2s,background .2s}
+.drop.over{border-color:var(--sky);background:var(--sky-bg)}
+.drop svg{width:56px;height:56px}
+.drop h2{margin:0;font:800 1.05rem var(--sans)}
+.drop p{margin:.2rem 0 0;color:var(--ink-2);font-size:.9rem}
+.drop .acts{display:flex;gap:.5rem;flex-wrap:wrap}
+.files{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.6rem}
+.files span{font:12px var(--mono);background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:.12rem .55rem}
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr) 1.1fr;gap:12px;margin:22px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.stat b{display:block;font:400 2.1rem/1 var(--serif)}
+.stat span{font-size:.82rem;color:var(--muted)}
+.stat.donut{display:flex;align-items:center;gap:14px}
+.donut svg{width:76px;height:76px;transform:rotate(-90deg)}
+.donut circle{fill:none;stroke-width:9}
+.donut .seg{transition:stroke-dasharray .8s ease}
+.legend{font-size:.8rem;color:var(--ink-2);display:grid;gap:.15rem}
+.legend b{font:800 .9rem var(--sans);display:inline;color:var(--ink)}
+.tag{white-space:nowrap}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:.35rem}
+/* tabs + list */
+.board{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.tabs{display:flex;gap:4px;padding:10px 10px 0;border-bottom:1px solid var(--line);overflow-x:auto;background:#fffaf6}
+.tab{appearance:none;border:0;background:none;font:700 .9rem var(--sans);color:var(--muted);padding:.65rem .85rem;border-radius:10px 10px 0 0;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ink);background:var(--card)}
+.tab .n{font:500 .75rem var(--mono);background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:0 .45rem;margin-left:.3rem}
+.tools{display:flex;gap:.6rem;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.search{flex:1;min-width:200px;position:relative}
+.search input{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:.5rem .7rem .5rem 2.1rem;font:15px var(--sans);background:var(--paper);color:var(--ink)}
+.search input:focus{border-color:var(--ink);outline:none}
+.search svg{position:absolute;left:.65rem;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)}
+.search kbd{position:absolute;right:.6rem;top:50%;transform:translateY(-50%)}
+select{border:1.5px solid var(--line);border-radius:10px;padding:.45rem .5rem;font:600 .85rem var(--sans);background:var(--paper);color:var(--ink)}
+.toggle{font-size:.85rem;color:var(--ink-2);display:flex;align-items:center;gap:.35rem}
+.blurb{padding:10px 16px;font-size:.88rem;color:var(--ink-2);background:#fffaf6;border-bottom:1px solid var(--line)}
+ul.people{list-style:none;margin:0;padding:0;max-height:560px;overflow:auto}
+.person{display:grid;grid-template-columns:42px 1fr auto;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid #f4e9e3;transition:background .15s}
+.person:hover{background:#fff4ec}
+.person.kept{opacity:.55}
+.av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font:800 .95rem var(--sans);color:#fff}
+.who b{font-weight:700}
+.who a{text-decoration:none}
+.who a:hover b{text-decoration:underline}
+.who small{display:block;font:13px var(--mono);color:var(--muted)}
+.tag{font:600 .72rem var(--sans);padding:.15rem .5rem;border-radius:999px;margin-left:.4rem;vertical-align:middle}
+.tag.nb{background:var(--brick-bg);color:var(--brick)}
+.tag.mu{background:var(--mint-bg);color:var(--mint)}
+.tag.fa{background:var(--sky-bg);color:var(--sky)}
+.row-acts{display:flex;gap:.35rem}
+.keep{appearance:none;border:1px solid var(--line);background:var(--paper);border-radius:9px;padding:.3rem .6rem;font:600 .78rem var(--sans);cursor:pointer;color:var(--ink-2)}
+.keep[aria-pressed=true]{background:var(--mint-bg);border-color:var(--mint);color:var(--mint)}
+.empty{padding:46px 20px;text-align:center;color:var(--ink-2)}
+.empty b{display:block;font:400 1.5rem var(--serif);color:var(--ink);margin-bottom:.3rem}
+.empty svg{width:70px;height:70px;margin-bottom:.4rem}
+.foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:10px 16px;font-size:.82rem;color:var(--muted)}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:30px}
+.how div{border-top:2px solid var(--ink);padding-top:10px}
+.how h3{margin:0 0 .3rem;font:800 .95rem var(--sans)}
+.how p{margin:0;font-size:.9rem;color:var(--ink-2)}
+.how code{font-family:var(--mono);font-size:.82rem;background:var(--card);border:1px solid var(--line);padding:0 .3rem;border-radius:5px}
+footer{margin-top:30px;font-size:.85rem;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,140%);background:var(--ink);color:var(--paper);padding:.6rem 1rem;border-radius:12px;transition:transform .25s;font-size:.9rem;z-index:9}
+.toast.show{transform:translate(-50%,0)}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}}
+.person{animation:rise .3s ease both}
+@media (max-width:600px){.tag{display:none}.stats{gap:8px}}
+@media (max-width:900px){.hero{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.stat.donut{grid-column:1/-1}.drop{grid-template-columns:1fr;text-align:left}.how{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#2b1d2f"/><rect x="9" y="9" width="22" height="24" rx="3" fill="#fff6f1"/><path d="M13 16h14M13 21h14M13 26h8" stroke="#d8c3b8" stroke-width="2"/><path d="M22 27l3 3 6-8" stroke="#11865f" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+  <div class="brand"><b>Follow Ledger</b><span>a kinder way to read your X follow lists</span></div>
+  <span class="src" id="src">no data loaded</span>
+</header>
+
+<section class="hero">
+  <h1>Who follows you back, who <mark>doesn't</mark>, and who quietly left.</h1>
+  <div>
+    <p>Load your follow lists and I'll sort them into a tidy ledger. Mark the people you'll keep following anyway, and export the rest as CSV.</p>
+    <p class="privacy">Everything happens in this tab. Nothing is uploaded anywhere.</p>
+  </div>
+</section>
+
+<section class="drop" id="drop" aria-labelledby="drop-h">
+  <svg viewBox="0 0 56 56" aria-hidden="true"><rect x="6" y="10" width="44" height="36" rx="7" fill="#fff6f1" stroke="#2b1d2f" stroke-width="2.5"/><path d="M28 18v16m-7-7 7 7 7-7" stroke="#2d5bd7" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 40h20" stroke="#d8c3b8" stroke-width="2.5" stroke-linecap="round"/></svg>
+  <div>
+    <h2 id="drop-h">Drop your files here</h2>
+    <p>Use the snapshots the tracker saves in <code>data/</code>, or <code>following.js</code> + <code>follower.js</code> from X's "Download your data" archive. Add an older followers snapshot to see who unfollowed.</p>
+    <div class="files" id="files"></div>
+  </div>
+  <div class="acts">
+    <label class="btn" for="pick" style="display:inline-block">Choose files…</label>
+    <input type="file" id="pick" multiple accept=".json,.js" hidden>
+    <button class="btn dark" id="sample" type="button">Try sample data</button>
+  </div>
+</section>
+
+<section class="stats" id="stats" aria-label="Summary" hidden>
+  <div class="stat"><b id="s-following">0</b><span>you follow</span></div>
+  <div class="stat"><b id="s-followers">0</b><span>follow you</span></div>
+  <div class="stat"><b id="s-nb">0</b><span>don't follow back</span></div>
+  <div class="stat"><b id="s-ratio">0</b><span>follower ratio</span></div>
+  <div class="stat donut">
+    <svg viewBox="0 0 42 42" aria-hidden="true"><circle cx="21" cy="21" r="15.9" stroke="#f1e4dc"/><circle class="seg" id="d-mu" cx="21" cy="21" r="15.9" stroke="#11865f" stroke-dasharray="0 100"/><circle class="seg" id="d-nb" cx="21" cy="21" r="15.9" stroke="#b93a12" stroke-dasharray="0 100"/></svg>
+    <div class="legend"><span><i style="background:#11865f"></i><b id="l-mu">0%</b> of who you follow are mutuals</span><span><i style="background:#b93a12"></i><b id="l-nb">0%</b> don't follow back</span></div>
+  </div>
+</section>
+
+<section class="board" aria-label="People">
+  <div class="tabs" role="tablist" id="tabs">
+    <button class="tab" role="tab" aria-selected="true" data-tab="notBack">Not following back<span class="n" id="n-notBack">0</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="unfollowed">Unfollowed you<span class="n" id="n-unfollowed">0</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="fans">Fans<span class="n" id="n-fans">0</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="mutuals">Mutuals<span class="n" id="n-mutuals">0</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="newFollowers">New followers<span class="n" id="n-newFollowers">0</span></button>
+  </div>
+  <div class="tools">
+    <label class="search"><span class="sr" style="position:absolute;left:-9999px">Search people</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="7" r="5"/><path d="m11 11 3.5 3.5"/></svg>
+      <input id="q" type="search" placeholder="Search by name or @handle" autocomplete="off"><kbd>/</kbd></label>
+    <select id="sort" aria-label="Sort"><option value="list">Order they appear</option><option value="az">A → Z</option><option value="za">Z → A</option></select>
+    <label class="toggle"><input type="checkbox" id="hidekept"> hide the ones I'm keeping</label>
+    <button class="btn sm" id="csv" type="button">Export CSV</button>
+  </div>
+  <div class="blurb" id="blurb"></div>
+  <ul class="people" id="list"></ul>
+  <div class="foot"><span id="count"></span><span><kbd>/</kbd> search · <kbd>←</kbd><kbd>→</kbd> switch tabs · <kbd>E</kbd> export</span></div>
+</section>
+
+<section class="how" aria-label="How it works">
+  <div><h3>1. Snapshot</h3><p>Run <code>python -m follow_tracker run</code> with your own X session cookies. It saves your lists to <code>data/</code>, locally.</p></div>
+  <div><h3>2. Open the ledger</h3><p>Run <code>python -m follow_tracker dashboard</code> and this page loads your latest snapshots automatically.</p></div>
+  <div><h3>3. Or skip the cookies</h3><p>Request your archive from X (Settings → Your account → Download an archive) and drop its two follow files here.</p></div>
+</section>
+
+<footer><span>Part of <a href="https://github.com/Dave-4u/x-follow-tracker">x-follow-tracker</a>. Not affiliated with X Corp.</span><span>Built by Dave Adegboro</span></footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="ledger.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const S = { following: [], followers: [], prev: [], res: null, tab: "notBack", kept: new Set(JSON.parse(localStorage.getItem("ledger-kept") || "[]")), files: [] };
+const BLURB = {
+  notBack: "You follow them, they don't follow you. Not a crime! Tap “Keep” on anyone you follow for their posts, not for a follow back.",
+  unfollowed: "They followed you in your older snapshot but not in the newest one.",
+  fans: "They follow you and you don't follow them. Maybe say hi?",
+  mutuals: "You follow each other. Your people.",
+  newFollowers: "In the newest followers list, not in the older one.",
+};
+const EMPTY = {
+  notBack: ["Everyone follows you back", "Either you're very charming or you follow very few people."],
+  unfollowed: ["Nobody left", "Load an older followers snapshot too, and anyone who unfollowed since will show up here."],
+  fans: ["No fans to follow back", "You already follow everyone who follows you."],
+  mutuals: ["No mutuals yet", "Mutuals appear once both lists are loaded."],
+  newFollowers: ["No new followers to show", "Load an older followers snapshot to compare against."],
+};
+const HUES = ["#b93a12", "#11865f", "#2d5bd7", "#8a4fb3", "#a35d00", "#0f7c8c", "#c2306b", "#4d6a1f"];
+const hue = (s) => HUES[[...String(s)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % HUES.length];
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function toast(m) { const t = $("#toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), 1900); }
+
+function animateNum(el, to, dec = 0) {
+  const from = +el.dataset.v || 0, t0 = performance.now();
+  el.dataset.v = to;
+  const step = (t) => { const k = Math.min(1, (t - t0) / 600), e = 1 - Math.pow(1 - k, 3); el.textContent = (from + (to - from) * e).toFixed(dec); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+function recompute() {
+  if (!S.following.length && !S.followers.length) return;
+  S.res = Ledger.compare(S.following, S.followers, S.prev);
+  $("#stats").hidden = false;
+  animateNum($("#s-following"), S.following.length); animateNum($("#s-followers"), S.followers.length);
+  animateNum($("#s-nb"), S.res.notBack.length);
+  animateNum($("#s-ratio"), S.following.length ? S.followers.length / S.following.length : 0, 2);
+  const mu = S.following.length ? (S.res.mutuals.length / S.following.length) * 100 : 0, nb = S.following.length ? 100 - mu : 0;
+  $("#d-mu").setAttribute("stroke-dasharray", `${mu} ${100 - mu}`);
+  $("#d-nb").setAttribute("stroke-dasharray", `${nb} ${100 - nb}`); $("#d-nb").setAttribute("stroke-dashoffset", `${-mu}`);
+  $("#l-mu").textContent = Math.round(mu) + "%"; $("#l-nb").textContent = Math.round(nb) + "%";
+  for (const k of Object.keys(BLURB)) $("#n-" + k).textContent = S.res[k].length;
+  render();
+}
+
+function render() {
+  const list = $("#list");
+  $("#blurb").textContent = BLURB[S.tab];
+  if (!S.res) {
+    list.innerHTML = `<li class="empty"><svg viewBox="0 0 70 70" aria-hidden="true"><circle cx="26" cy="28" r="10" fill="#fff6f1" stroke="#2b1d2f" stroke-width="2.5"/><circle cx="46" cy="28" r="10" fill="#ffe14d" stroke="#2b1d2f" stroke-width="2.5"/><path d="M12 56c2-9 8-13 14-13s12 4 14 13M32 56c2-9 8-13 14-13s12 4 14 13" fill="none" stroke="#2b1d2f" stroke-width="2.5"/></svg><b>Your ledger is empty</b>Drop your follow files above, or press “Try sample data” to see how it works.</li>`;
+    $("#count").textContent = ""; return;
+  }
+  const q = $("#q").value.trim().toLowerCase().replace(/^@/, "");
+  let rows = S.res[S.tab].filter((u) => !q || `${u.username} ${u.name} ${u.id}`.toLowerCase().includes(q));
+  if ($("#hidekept").checked && S.tab === "notBack") rows = rows.filter((u) => !S.kept.has(String(u.id)));
+  const sort = $("#sort").value, key = (u) => (u.name || u.username || u.id).toLowerCase();
+  if (sort !== "list") rows = [...rows].sort((a, b) => sort === "az" ? key(a).localeCompare(key(b)) : key(b).localeCompare(key(a)));
+  S.visible = rows;
+  const tagFor = { notBack: '<span class="tag nb">not following back</span>', mutuals: '<span class="tag mu">mutual</span>', fans: '<span class="tag fa">follows you</span>', unfollowed: '<span class="tag nb">unfollowed</span>', newFollowers: '<span class="tag fa">new</span>' }[S.tab];
+  if (!rows.length) {
+    const [h, p] = q ? ["No matches", `Nobody here matches “${esc(q)}”. Try part of a name.`] : EMPTY[S.tab];
+    list.innerHTML = `<li class="empty"><b>${h}</b>${p}</li>`;
+  } else {
+    list.innerHTML = rows.slice(0, 400).map((u, i) => {
+      const id = String(u.id), kept = S.kept.has(id), handle = u.username ? "@" + u.username : "id " + id;
+      const link = u.username ? `https://x.com/${encodeURIComponent(u.username)}` : (u.link || `https://x.com/i/user/${id}`);
+      const initials = ((u.name || u.username || "?").match(/\b\w/g) || ["?"]).slice(0, 2).join("").toUpperCase();
+      return `<li class="person ${kept && S.tab === "notBack" ? "kept" : ""}" style="animation-delay:${Math.min(i, 20) * 18}ms">
+        <span class="av" style="background:${hue(id)}" aria-hidden="true">${esc(initials)}</span>
+        <span class="who"><a href="${esc(link)}" target="_blank" rel="noopener"><b>${esc(u.name || handle)}</b></a>${i < 0 ? "" : tagFor}<small>${esc(handle)}</small></span>
+        <span class="row-acts">${S.tab === "notBack" ? `<button class="keep" data-id="${esc(id)}" aria-pressed="${kept}" title="Keep following regardless">${kept ? "Keeping ✓" : "Keep"}</button>` : ""}</span>
+      </li>`;
+    }).join("");
+    list.querySelectorAll(".keep").forEach((b) => b.onclick = () => {
+      const id = b.dataset.id; S.kept.has(id) ? S.kept.delete(id) : S.kept.add(id);
+      localStorage.setItem("ledger-kept", JSON.stringify([...S.kept]));
+      toast(S.kept.has(id) ? "Marked as one you're keeping" : "Unmarked"); render();
+    });
+  }
+  const total = S.res[S.tab].length;
+  $("#count").textContent = rows.length === total ? `${total} ${total === 1 ? "person" : "people"}` : `showing ${rows.length} of ${total}`;
+}
+
+function setTab(t) {
+  S.tab = t; document.querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === t)); render();
+}
+document.querySelectorAll(".tab").forEach((b) => b.onclick = () => setTab(b.dataset.tab));
+$("#q").oninput = render; $("#sort").onchange = render; $("#hidekept").onchange = render;
+$("#csv").onclick = () => {
+  if (!S.visible || !S.visible.length) return toast("Nothing to export on this tab");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([Ledger.toCSV(S.visible)], { type: "text/csv" }));
+  a.download = `${S.tab}.csv`; a.click(); toast(`Exported ${S.visible.length} rows`);
+};
+
+async function loadFiles(fileList) {
+  const parsed = [];
+  for (const f of fileList) {
+    try { parsed.push({ ...Ledger.parseFile(f.name, await f.text()), name: f.name }); }
+    catch (e) { toast(`Couldn't read ${f.name}`); }
+  }
+  const fol = parsed.filter((p) => p.kind === "followers").sort((a, b) => String(b.savedAt || b.name).localeCompare(String(a.savedAt || a.name)));
+  const fing = parsed.filter((p) => p.kind === "following");
+  if (fing.length) S.following = fing[0].users;
+  if (fol.length) { S.followers = fol[0].users; if (fol[1]) S.prev = fol[1].users; }
+  const unknown = parsed.filter((p) => !p.kind);
+  if (unknown.length) toast(`Not sure if ${unknown.map((u) => u.name).join(", ")} is following or followers. Put the word in the file name.`);
+  S.files = parsed.map((p) => `${p.name} · ${p.kind || "?"} · ${p.users.length}`);
+  $("#files").innerHTML = S.files.map((f) => `<span>${esc(f)}</span>`).join("");
+  $("#src").textContent = parsed[0] && parsed[0].source === "X archive" ? "from your X archive" : "from your files";
+  recompute();
+}
+$("#pick").onchange = (e) => loadFiles(e.target.files);
+const drop = $("#drop");
+["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (e) => loadFiles(e.dataTransfer.files));
+
+function sampleData() {
+  const first = ["Amaka", "Tunde", "Zainab", "Chidi", "Fola", "Ngozi", "Seyi", "Ifeoma", "Bayo", "Kemi", "Musa", "Ada", "Femi", "Halima", "Obi", "Lara", "Kofi", "Priya", "Mateo", "Hannah", "Yusuf", "Ruth", "Emeka", "Sade", "Dami", "Ireti", "Jide", "Nkem", "Ola", "Tobi"];
+  const last = ["Builds", "Codes", "Designs", "Ships", "Writes", "Learns", "Data", "Dev", "Pixels", "Stack"];
+  const people = [];
+  for (let i = 0; i < 84; i++) {
+    const f = first[(i * 7) % first.length], l = last[(i * 3) % last.length];
+    people.push({ id: String(1000 + i * 37), username: `${f.toLowerCase()}${l.toLowerCase()}${i % 5 ? "" : "_"}`, name: `${f} ${l === "Dev" ? "the Dev" : l}` });
+  }
+  const following = people.filter((_, i) => i % 6 !== 0).slice(0, 60);
+  const followers = people.filter((_, i) => i % 4 !== 1 && i < 78);
+  const prev = [...followers.slice(3), people[1], people[5], people[9], people[13]];
+  return { following, followers, prev };
+}
+$("#sample").onclick = () => {
+  const d = sampleData(); S.following = d.following; S.followers = d.followers; S.prev = d.prev;
+  $("#files").innerHTML = "<span>sample · following · 60</span><span>sample · followers (now)</span><span>sample · followers (last week)</span>";
+  $("#src").textContent = "sample data (made-up people)"; recompute(); toast("Loaded made-up sample data");
+};
+
+document.addEventListener("keydown", (e) => {
+  if (e.target.matches("input,select,textarea")) { if (e.key === "Escape") e.target.blur(); return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const tabs = [...document.querySelectorAll(".tab")].map((b) => b.dataset.tab), i = tabs.indexOf(S.tab);
+  if (e.key === "/") { e.preventDefault(); $("#q").focus(); }
+  else if (e.key === "ArrowRight") setTab(tabs[(i + 1) % tabs.length]);
+  else if (e.key === "ArrowLeft") setTab(tabs[(i - 1 + tabs.length) % tabs.length]);
+  else if (e.key === "e" || e.key === "E") $("#csv").click();
+});
+
+// When served by `python -m follow_tracker dashboard`, load local snapshots.
+fetch("api/snapshots").then((r) => r.ok ? r.json() : null).then((d) => {
+  if (!d || !d.ok) return render();
+  if (!d.following.length && !d.followers.length) { $("#src").textContent = `local · @${d.username} · no snapshots yet`; return render(); }
+  S.following = d.following; S.followers = d.followers; S.prev = d.previous_followers || [];
+  $("#src").textContent = `local snapshots · @${d.username}`;
+  $("#files").innerHTML = d.files.map((f) => `<span>${esc(f)}</span>`).join(""); recompute();
+}).catch(() => render());
+render();
+</script>
+</body>
+</html>
